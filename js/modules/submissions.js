@@ -67,15 +67,15 @@ async function handleSubmit(e) {
         // Guardar en localStorage para historial local
         saveSubmissionToStorage(submission);
 
-        // Mostrar mensaje de éxito
-        alert(`¡Gracias por tu sugerencia, ${name}! 🚌\n\nHemos recibido tu propuesta correctamente.\nRevisaremos la información y la añadiremos al mapa si es válida.`);
-
         // Resetear formulario
         form.reset();
 
         // Restaurar botón
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
+
+        // Mostrar mensaje de éxito
+        showThankYouMessage(name);
 
     } catch (error) {
         console.error('Error al enviar:', error);
@@ -85,6 +85,73 @@ async function handleSubmit(e) {
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
     }
+}
+
+/**
+ * Muestra el mensaje de agradecimiento
+ */
+function showThankYouMessage(name) {
+    const section = document.querySelector('#compartir-section');
+    
+    const thankYouHTML = `
+        <div id="thankYouMessage" class="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-8 border-2 border-green-200 dark:border-green-800 text-center animate-fade-in">
+            <div class="text-6xl mb-4">🎉</div>
+            <h3 class="text-2xl font-bold text-green-800 dark:text-green-200 mb-3">
+                ¡Gracias por tu sugerencia, ${escapeHTML(name)}!
+            </h3>
+            <p class="text-lg text-green-700 dark:text-green-300 mb-2">
+                Hemos recibido tu propuesta correctamente.
+            </p>
+            <p class="text-green-600 dark:text-green-400 mb-6">
+                Revisaremos la información y la añadiremos al mapa si es válida. 🚌
+            </p>
+            <button onclick="window.closeThankYou()" class="bg-bus-green text-white px-6 py-3 rounded-xl font-semibold hover:bg-green-600 transition-colors btn-touch">
+                Volver al formulario
+            </button>
+        </div>
+    `;
+    
+    // Ocultar formulario y mostrar agradecimiento
+    const formContainer = section.querySelector('form')?.parentElement;
+    if (formContainer) {
+        formContainer.style.display = 'none';
+    }
+    
+    // Insertar mensaje después del título
+    const title = section.querySelector('h2');
+    const thankYouDiv = document.createElement('div');
+    thankYouDiv.innerHTML = thankYouHTML;
+    title.parentNode.insertBefore(thankYouDiv.firstChild, title.nextSibling);
+    
+    // Auto-ocultar después de 10 segundos
+    setTimeout(() => {
+        const msg = document.getElementById('thankYouMessage');
+        if (msg) msg.classList.add('hidden');
+    }, 10000);
+}
+
+/**
+ * Cierra el mensaje de agradecimiento
+ */
+window.closeThankYou = () => {
+    const thankYouMsg = document.getElementById('thankYouMessage');
+    const formContainer = document.querySelector('#compartir-section form')?.parentElement;
+    
+    if (thankYouMsg) {
+        thankYouMsg.remove();
+    }
+    if (formContainer) {
+        formContainer.style.display = 'block';
+    }
+};
+
+/**
+ * Escapa HTML para prevenir XSS
+ */
+function escapeHTML(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
 }
 
 /**
