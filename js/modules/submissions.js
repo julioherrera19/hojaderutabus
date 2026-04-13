@@ -94,20 +94,26 @@ function showThankYouMessage(name) {
     const section = document.querySelector('#compartir-section');
     
     const thankYouHTML = `
-        <div id="thankYouMessage" class="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-8 border-2 border-green-200 dark:border-green-800 text-center animate-fade-in">
-            <div class="text-6xl mb-4">🎉</div>
-            <h3 class="text-2xl font-bold text-green-800 dark:text-green-200 mb-3">
-                ¡Gracias por tu sugerencia, ${escapeHTML(name)}!
-            </h3>
-            <p class="text-lg text-green-700 dark:text-green-300 mb-2">
-                Hemos recibido tu propuesta correctamente.
-            </p>
-            <p class="text-green-600 dark:text-green-400 mb-6">
-                Revisaremos la información y la añadiremos al mapa si es válida. 🚌
-            </p>
-            <button onclick="window.closeThankYou()" class="bg-bus-green text-white px-6 py-3 rounded-xl font-semibold hover:bg-green-600 transition-colors btn-touch">
-                Volver al formulario
-            </button>
+        <div id="thankYouMessage" class="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-0 overflow-hidden border-2 border-green-200 dark:border-green-800 text-center animate-fade-in">
+            <div class="relative h-64 sm:h-80 w-full bg-gray-100 dark:bg-gray-800">
+                <img src="assets/img/thankyou.jpg" alt="Gracias" class="w-full h-full object-cover" loading="lazy">
+            </div>
+            <div class="p-6 sm:p-8">
+                <div class="text-5xl mb-4">🎉</div>
+                <h3 class="text-2xl sm:text-3xl font-bold text-green-800 dark:text-green-200 mb-3">
+                    ¡Gracias por tu sugerencia, ${escapeHTML(name)}!
+                </h3>
+                <p class="text-lg text-green-700 dark:text-green-300 mb-2">
+                    Hemos recibido tu propuesta correctamente.
+                </p>
+                <p class="text-green-600 dark:text-green-400 mb-6">
+                    Revisaremos la información y la añadiremos al mapa si es válida. 🚌
+                </p>
+                <button onclick="window.closeThankYou()" class="bg-bus-green text-white px-8 py-3 rounded-xl font-semibold hover:bg-green-600 transition-colors btn-touch inline-flex items-center gap-2">
+                    <span>Volver al formulario</span>
+                    <span>✏️</span>
+                </button>
+            </div>
         </div>
     `;
     
