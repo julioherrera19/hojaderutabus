@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Gracias por tu sugerencia! | Hoja de Ruta Bus</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'bus-yellow': '#FBBF24',
+                        'bus-green': '#22C55E',
+                        'bus-blue': '#3B82F6',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Estilos personalizados -->
+    <link rel="stylesheet" href="css/styles.css">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="assets/favi/favi.png">
+</head>
+<body class="bg-gray-50 dark:bg-gray-900">
+    <!-- Navbar -->
+    <nav class="navbar bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+                <a href="index.html" class="flex items-center gap-2">
+                    <span class="text-2xl">🚌</span>
+                    <span class="font-bold text-lg text-gray-800 dark:text-white hidden sm:block">Hoja de Ruta Bus</span>
+                    <span class="font-bold text-lg text-gray-800 dark:text-white sm:hidden">HojaRutaBus</span>
+                </a>
+
+                <a href="index.html#compartir" class="text-bus-yellow font-semibold hover:underline flex items-center gap-1">
+                    <span>Volver al formulario</span>
+                    <span>✏️</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Thank You Message -->
+    <section class="py-12 sm:py-16">
+        <div class="max-w-2xl mx-auto px-4">
+            <div class="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-green-200 dark:border-green-800 shadow-xl">
+                <!-- Imagen -->
+                <div class="relative h-64 sm:h-80 w-full bg-gray-100 dark:bg-gray-800">
+                    <img src="assets/img/thankyou.jpg" alt="Gracias" class="w-full h-full object-cover" loading="lazy">
+                </div>
+                
+                <!-- Contenido -->
+                <div class="p-6 sm:p-8 text-center">
+                    <div class="text-5xl sm:text-6xl mb-4">🎉</div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-green-800 dark:text-green-200 mb-3">
+                        ¡Gracias por tu sugerencia!
+                    </h1>
+                    <p class="text-lg text-green-700 dark:text-green-300 mb-2">
+                        Hemos recibido tu propuesta correctamente.
+                    </p>
+                    <p class="text-green-600 dark:text-green-400 mb-6">
+                        Revisaremos la información y la añadiremos al mapa si es válida. 🚌
+                    </p>
+                    
+                    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                        <a href="index.html" class="bg-bus-green text-white px-8 py-3 rounded-xl font-semibold hover:bg-green-600 transition-colors btn-touch inline-flex items-center justify-center gap-2">
+                            <span>Volver al inicio</span>
+                            <span>🏠</span>
+                        </a>
+                        <a href="index.html#compartir" class="bg-white dark:bg-gray-800 text-bus-green px-8 py-3 rounded-xl font-semibold border-2 border-bus-green hover:bg-green-50 dark:hover:bg-gray-700 transition-colors btn-touch inline-flex items-center justify-center gap-2">
+                            <span>Enviar otra sugerencia</span>
+                            <span>✏️</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Información adicional -->
+            <div class="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
+                <p>💙 Gracias por ayudar a la comunidad de conductores de autocar.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-12">
+        <div class="max-w-6xl mx-auto px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
+            <p>Desarrollado por Julio Herrera © 2025</p>
+        </div>
+    </footer>
+</body>
+</html>
