@@ -39,7 +39,18 @@ export function renderCards() {
 function createCard(p, index) {
     return `
         <article class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm card-hover overflow-hidden" data-index="${index}">
-            <div class="p-4 sm:p-5">
+            <div class="flex flex-col sm:flex-row">
+                ${p.imagen ? `
+                <div class="sm:flex-shrink-0 sm:w-48 h-48 sm:h-auto relative">
+                    <img src="${p.imagen}" alt="${p.nombre}" class="w-full h-full object-cover" loading="lazy">
+                    ${p.street_view ? `
+                    <button onclick="window.toggleStreetView(${index})" class="absolute bottom-2 right-2 bg-gray-900/80 hover:bg-gray-900 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1 backdrop-blur-sm">
+                        🗺️ Street View
+                    </button>
+                    ` : ''}
+                </div>
+                ` : ''}
+                <div class="p-4 sm:p-5 flex-1">
                 <div class="flex justify-between items-start gap-3 mb-3">
                     <div class="flex-1">
                         <div class="flex items-center gap-2 mb-1 flex-wrap">
@@ -115,14 +126,60 @@ function createEmptyState() {
 window.toggleDetail = (id) => {
     const detail = document.getElementById(`detail-${id}`);
     const isOpen = detail?.classList.contains(CONFIG.CLASSES.ACTIVE);
-    
+
     document.querySelectorAll('.card-detail').forEach(el => {
         el.classList.remove(CONFIG.CLASSES.ACTIVE);
         el.style.maxHeight = '0';
     });
-    
+
     if (!isOpen && detail) {
         detail.classList.add(CONFIG.CLASSES.ACTIVE);
         detail.style.maxHeight = detail.scrollHeight + 'px';
     }
 };
+
+/**
+ * Expone toggleStreetView globalmente para mostrar la imagen street view
+ */
+window.toggleStreetView = (id) => {
+    const parada = state.paradas[id];
+    if (!parada || !parada.street_view) return;
+    
+    // Crear modal si no existe
+    let modal = document.getElementById('streetViewModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'streetViewModal';
+        modal.className = 'fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4';
+        modal.innerHTML = `
+            <div class="relative max-w-4xl w-full">
+                <button onclick="window.closeStreetView()" class="absolute -top-12 right-0 text-white hover:text-gray-300 text-2xl font-bold transition-colors">✕ Cerrar</button>
+                <img id="streetViewImage" src="" alt="Street View" class="w-full h-auto rounded-lg">
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    
+    const img = modal.querySelector('#streetViewImage');
+    img.src = parada.street_view;
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+};
+
+/**
+ * Cierra el modal de street view
+ */
+window.closeStreetView = () => {
+    const modal = document.getElementById('streetViewModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+};
+
+// Cerrar modal con tecla Escape
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        window.closeStreetView();
+    }
+});
