@@ -228,18 +228,19 @@
                 </p>
             </div>
 
-            <form id="suggestForm" class="space-y-4" novalidate>
+            <form name="suggest" method="POST" data-netlify="true" netlify class="space-y-4" novalidate>
+                <input type="hidden" name="form-name" value="suggest">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre *</label>
-                    <input type="text" id="suggestName" placeholder="Tu nombre" class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-bus-yellow" required>
+                    <input type="text" name="name" id="suggestName" placeholder="Tu nombre" class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-bus-yellow" required>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Dirección de correo electrónico *</label>
-                    <input type="email" id="suggestEmail" placeholder="tu@email.com" class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-bus-yellow" required>
+                    <input type="email" name="email" id="suggestEmail" placeholder="tu@email.com" class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-bus-yellow" required>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mensaje *</label>
-                    <textarea id="suggestMessage" rows="4" placeholder="Cuéntanos sobre el restaurante: nombre, ubicación, autovía, km, ¿cabes 15m?, qué te ofrecen..." class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-bus-yellow resize-none" required></textarea>
+                    <textarea name="message" id="suggestMessage" rows="4" placeholder="Cuéntanos sobre el restaurante: nombre, ubicación, autovía, km, ¿cabes 15m?, qué te ofrecen..." class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-bus-yellow resize-none" required></textarea>
                 </div>
                 <button type="submit" class="w-full bg-bus-green text-white py-4 rounded-xl font-semibold btn-touch hover:bg-green-600 transition-colors flex items-center justify-center gap-2">
                     <span>Enviar sugerencia</span>

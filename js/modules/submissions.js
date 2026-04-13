@@ -9,7 +9,7 @@ import { state } from './state.js';
  */
 export function initSubmissions() {
     loadSubmissionsFromStorage();
-    
+
     const form = document.getElementById(CONFIG.SELECTORS.SUGGEST_FORM.replace('#', ''));
     form?.addEventListener('submit', handleSubmit);
 }
@@ -17,14 +17,17 @@ export function initSubmissions() {
 /**
  * Maneja el envío del formulario
  */
-function handleSubmit(e) {
+async function handleSubmit(e) {
     e.preventDefault();
 
-    const name = document.getElementById('suggestName')?.value.trim();
-    const email = document.getElementById('suggestEmail')?.value.trim();
-    const message = document.getElementById('suggestMessage')?.value.trim();
+    const form = e.target;
+    const formData = new FormData(form);
 
     // Validación básica
+    const name = formData.get('name')?.trim();
+    const email = formData.get('email')?.trim();
+    const message = formData.get('message')?.trim();
+
     if (!name || !email || !message) {
         alert('Por favor, completa todos los campos obligatorios (*).');
         return;
@@ -37,28 +40,51 @@ function handleSubmit(e) {
         return;
     }
 
-    // Crear objeto de sugerencia
-    const submission = {
-        id: Date.now(),
-        name,
-        email,
-        message,
-        fecha: new Date().toISOString(),
-        estado: 'pendiente'
-    };
+    // Mostrar estado de envío
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<span>Enviando...</span>';
+    submitBtn.disabled = true;
 
-    // Guardar
-    saveSubmissionToStorage(submission);
+    try {
+        // Enviar a Netlify Forms
+        await fetch('/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams(Object.fromEntries(formData))
+        });
 
-    // Mostrar mensaje
-    alert(`¡Gracias por tu sugerencia, ${name}! 🚌\n\nHemos guardado tu propuesta.\nRevisaremos la información y la añadiremos al mapa si es válida.`);
+        // Crear objeto de sugerencia para localStorage
+        const submission = {
+            id: Date.now(),
+            name,
+            email,
+            message,
+            fecha: new Date().toISOString(),
+            estado: 'enviado'
+        };
 
-    // Resetear formulario
-    e.target.reset();
+        // Guardar en localStorage para historial local
+        saveSubmissionToStorage(submission);
 
-    // Scroll al historial
-    document.getElementById(CONFIG.SELECTORS.SUBMISSIONS_HISTORY.replace('#', ''))
-        ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        // Mostrar mensaje de éxito
+        alert(`¡Gracias por tu sugerencia, ${name}! 🚌\n\nHemos recibido tu propuesta correctamente.\nRevisaremos la información y la añadiremos al mapa si es válida.`);
+
+        // Resetear formulario
+        form.reset();
+
+        // Restaurar botón
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+
+    } catch (error) {
+        console.error('Error al enviar:', error);
+        alert('Hubo un error al enviar tu sugerencia. Por favor, inténtalo de nuevo.');
+        
+        // Restaurar botón
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
 }
 
 /**
