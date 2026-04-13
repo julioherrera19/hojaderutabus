@@ -68,7 +68,7 @@ function createCard(p, index) {
                 ${createBenefitsSection(p.ventajas)}
 
                 <button onclick="window.toggleDetail(${index})" class="text-bus-yellow text-sm font-semibold hover:underline flex items-center gap-1">
-                    Ver detalle táctico <span class="transform transition-transform">▼</span>
+                    Ver más <span class="transform transition-transform">▼</span>
                 </button>
 
                 <div id="detail-${index}" class="card-detail">

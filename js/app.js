@@ -11,6 +11,7 @@ import { initFilters, filterParadas } from './modules/filters.js';
 import { renderCards } from './modules/cards.js';
 import { initMap, updateMapMarkers } from './modules/map.js';
 import { initSubmissions, initSocialLinks } from './modules/submissions.js';
+import { initFoodGallery } from './modules/food-gallery.js';
 import { loadParadas } from './modules/data.js';
 
 /**
@@ -33,6 +34,7 @@ async function initApp() {
     });
     initSubmissions();
     initSocialLinks();
+    initFoodGallery();
     
     // 4. Renderizar contenido inicial
     renderCards();

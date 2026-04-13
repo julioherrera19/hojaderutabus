@@ -16,6 +16,7 @@ export function showSection(sectionId) {
     const sections = {
         hero: document.getElementById('hero'),
         intro: document.getElementById('intro'),
+        foodGallery: document.getElementById('food-gallery-section'),
         filters: document.getElementById('filters'),
         search: document.getElementById('search'),
         areas: document.getElementById('areas-section'),
@@ -28,6 +29,7 @@ export function showSection(sectionId) {
         case 'inicio':
             sections.hero?.classList.add(CONFIG.CLASSES.ACTIVE);
             sections.intro?.classList.add(CONFIG.CLASSES.ACTIVE);
+            sections.foodGallery?.classList.add(CONFIG.CLASSES.ACTIVE);
             sections.filters?.classList.add(CONFIG.CLASSES.ACTIVE);
             sections.search?.classList.add(CONFIG.CLASSES.ACTIVE);
             sections.areas?.classList.add(CONFIG.CLASSES.ACTIVE);
