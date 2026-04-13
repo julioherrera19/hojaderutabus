@@ -1,0 +1,33 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Dependencias (si usas npm)
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Environment
+.env
+.env.local
+
+# Media grande (opcional - si prefieres no subir videos)
+# *.mp4
+# *.webp
+# *.png
+# *.jpg
+
+# Qwen Code
+.qwen/
