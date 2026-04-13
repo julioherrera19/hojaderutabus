@@ -37,9 +37,7 @@
         <div class="max-w-6xl mx-auto px-4">
             <div class="flex justify-between items-center h-16">
                 <a href="#inicio" class="flex items-center gap-2" data-section="inicio">
-                    <span class="text-2xl">🚌</span>
-                    <span class="font-bold text-lg text-gray-800 dark:text-white hidden sm:block">Hoja de Ruta Bus</span>
-                    <span class="font-bold text-lg text-gray-800 dark:text-white sm:hidden">HojaRutaBus</span>
+                    <span class="font-bold text-xl sm:text-2xl text-gray-800 dark:text-white">Hoja de Ruta - Autocar</span>
                 </a>
 
                 <div class="hidden md:flex items-center gap-6">
@@ -242,6 +240,15 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mensaje *</label>
                     <textarea name="message" id="suggestMessage" rows="4" placeholder="Cuéntanos sobre el restaurante: nombre, ubicación, autovía, km, ¿cabes 15m?, qué te ofrecen..." class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-bus-yellow resize-none" required></textarea>
                 </div>
+                
+                <!-- Disclaimer RGPD -->
+                <div class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                    <p class="mb-2">
+                        Al enviar este formulario aceptas que tus datos se utilicen exclusivamente para gestionar tu sugerencia en Hoja de Ruta Autocar. No se cederán a terceros. Puedes solicitar su eliminación escribiendo a 
+                        <a href="mailto:julioherrera11.jjhl@gmail.com" class="text-bus-yellow hover:underline font-medium">julioherrera11.jjhl@gmail.com</a>
+                    </p>
+                </div>
+                
                 <button type="submit" class="w-full bg-bus-green text-white py-4 rounded-xl font-semibold btn-touch hover:bg-green-600 transition-colors flex items-center justify-center gap-2">
                     <span>Enviar sugerencia</span>
                     <span>✍️</span>
