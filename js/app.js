@@ -10,7 +10,7 @@ import { initNavigation, showSection } from './modules/navigation.js';
 import { initFilters, filterParadas } from './modules/filters.js';
 import { renderCards } from './modules/cards.js';
 import { initMap, updateMapMarkers } from './modules/map.js';
-import { initSubmissions } from './modules/submissions.js';
+import { initSubmissions, initSocialLinks } from './modules/submissions.js';
 import { loadParadas } from './modules/data.js';
 
 /**
@@ -32,6 +32,7 @@ async function initApp() {
         renderCards();
     });
     initSubmissions();
+    initSocialLinks();
     
     // 4. Renderizar contenido inicial
     renderCards();

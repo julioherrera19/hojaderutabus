@@ -193,7 +193,7 @@ export function renderSubmissionsHistory() {
     }
 
     historyContainer?.classList.remove('hidden');
-    
+
     listContainer.innerHTML = state.submissions.map(sub => `
         <div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-3 border border-gray-200 dark:border-gray-700">
             <div class="flex justify-between items-start">
@@ -202,9 +202,32 @@ export function renderSubmissionsHistory() {
                     <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Enviado por: ${sub.name}</p>
                 </div>
                 <span class="text-xs bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-2 py-1 rounded-full font-medium whitespace-nowrap ml-2">
-                    ✓ Pendiente
+                    ✓ Enviado
                 </span>
             </div>
         </div>
     `).join('');
+}
+
+/**
+ * Configura los enlaces de redes sociales (placeholder)
+ * Actualizar cuando se tengan los enlaces reales
+ */
+export function initSocialLinks() {
+    // TODO: Reemplazar con los enlaces reales cuando se proporcionen
+    const instagramLink = document.getElementById('instagramLink');
+    const tiktokLink = document.getElementById('tiktokLink');
+    
+    // Placeholder - se actualizarán cuando se pasen los enlaces
+    const SOCIAL_LINKS = {
+        instagram: '#',  // Pending: enlace real de Instagram
+        tiktok: '#'      // Pending: enlace real de TikTok
+    };
+    
+    if (instagramLink && SOCIAL_LINKS.instagram !== '#') {
+        instagramLink.href = SOCIAL_LINKS.instagram;
+    }
+    if (tiktokLink && SOCIAL_LINKS.tiktok !== '#') {
+        tiktokLink.href = SOCIAL_LINKS.tiktok;
+    }
 }
