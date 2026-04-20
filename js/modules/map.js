@@ -112,7 +112,13 @@ function createPopupContent(p, index) {
                 ${p.esFounder ? '<span class="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded">✓ Julio</span>' : (p.verificado_por ? `<span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">✓ ${p.verificado_por}</span>` : '')}
                 ${p.apto15m ? '<span class="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">🚌 Friendly</span>' : ''}
             </div>
-            <a href="#" class="inline-block text-sm text-bus-yellow font-semibold" data-index="${index}">Ver detalles →</a>
+            <div class="flex gap-2 mb-2">
+                <a href="https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}" target="_blank" rel="noopener" class="inline-block text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded font-medium transition-colors flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                    Cómo llegar
+                </a>
+                <a href="#" class="inline-block text-sm text-bus-yellow font-semibold" data-index="${index}">Ver detalles →</a>
+            </div>
         </div>
     `;
 }
