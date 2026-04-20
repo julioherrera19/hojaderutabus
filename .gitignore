@@ -27,3 +27,14 @@ build/
 # Qwen Code
 .qwen/
 .claude/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+venv/
+.env/
+
+# Temporales
+*.tmp
+*.bak

@@ -78,7 +78,29 @@ async function initApp() {
         }
     });
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    
+
+    // 9. Animación del contador de paradas (11 → 38)
+    const contadorEl = document.getElementById('contador-paradas');
+    console.log('Contador el:', contadorEl);
+    if (contadorEl) {
+        const fin = parseInt(contadorEl.dataset.fin) || 38;
+        console.log('Valor final:', fin);
+        let actual = 11;
+        const duracion = 1500;
+        const pasos = 30;
+        const incremento = (fin - 11) / pasos;
+        const intervalo = duracion / pasos;
+
+        const animacion = setInterval(() => {
+            actual += incremento;
+            if (actual >= fin) {
+                actual = fin;
+                clearInterval(animacion);
+            }
+            contadorEl.textContent = Math.floor(actual);
+        }, intervalo);
+    }
+
     console.log('✅ Aplicación inicializada correctamente');
 }
 

@@ -55,12 +55,10 @@ function setFilter(axis, onFilterChange) {
 }
 
 /**
- * Normaliza una autovía (AP-1 -> A-1, A-31 -> A-3)
+ * Normaliza una autovía (AP-1 -> A-1)
  */
 export function normalizeAutovia(autovia) {
-    let normalized = autovia.replace(/^AP-/, 'A-');
-    normalized = normalized.replace(/^A-31/, 'A-3');
-    return normalized;
+    return autovia.replace(/^AP-/, 'A-');
 }
 
 /**
@@ -68,8 +66,20 @@ export function normalizeAutovia(autovia) {
  */
 export function autoviaMatchesFilter(autovia, filter) {
     if (filter === 'all') return true;
-    const normalized = normalizeAutovia(autovia);
-    return normalized === filter;
+
+    // Si el filtro es AP-X, buscar coincidencia con AP-X o A-X
+    if (filter.startsWith('AP-')) {
+        const alternativeFilter = filter.replace(/^AP-/, 'A-');
+        return autovia === filter || autovia === alternativeFilter;
+    }
+
+    // Si el filtro es A-X, buscar coincidencia con A-X o AP-X
+    if (filter.startsWith('A-')) {
+        const alternativeFilter = 'AP-' + filter.replace(/^A-/, '');
+        return autovia === filter || autovia === alternativeFilter;
+    }
+
+    return autovia === filter;
 }
 
 /**

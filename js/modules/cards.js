@@ -45,7 +45,7 @@ function createCard(p, index) {
                     <img src="${p.imagen}" alt="${p.nombre}" class="w-full h-full object-cover" loading="lazy">
                     ${p.street_view ? `
                     <button onclick="window.toggleStreetView(${index})" class="absolute bottom-2 right-2 bg-gray-900/80 hover:bg-gray-900 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1 backdrop-blur-sm">
-                        🗺️ Street View
+                        📍 Ver en Maps
                     </button>
                     ` : ''}
                 </div>
@@ -55,7 +55,7 @@ function createCard(p, index) {
                     <div class="flex-1">
                         <div class="flex items-center gap-2 mb-1 flex-wrap">
                             <h3 class="font-bold text-lg text-gray-800 dark:text-white">${p.nombre}</h3>
-                            ${p.esFounder ? '<span class="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded-full font-medium flex items-center gap-1">✓ Validada por Julio</span>' : ''}
+                            ${p.esFounder ? '<span class="text-xs bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 px-2 py-1 rounded-full font-medium flex items-center gap-1">✓ Validada por Julio</span>' : (p.verificado_por ? `<span class="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded-full font-medium flex items-center gap-1">✓ Validada por ${p.verificado_por}</span>` : '')}
                         </div>
                         <p class="text-sm text-gray-500 dark:text-gray-400">${p.autovia} · km ${p.km}</p>
                         <p class="text-xs text-gray-400 dark:text-gray-500">📍 ${p.comunidad}</p>
@@ -139,47 +139,12 @@ window.toggleDetail = (id) => {
 };
 
 /**
- * Expone toggleStreetView globalmente para mostrar la imagen street view
+ * Expone toggleStreetView globalmente para abrir Google Maps Street View
  */
 window.toggleStreetView = (id) => {
     const parada = state.paradas[id];
     if (!parada || !parada.street_view) return;
-    
-    // Crear modal si no existe
-    let modal = document.getElementById('streetViewModal');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'streetViewModal';
-        modal.className = 'fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4';
-        modal.innerHTML = `
-            <div class="relative max-w-4xl w-full">
-                <button onclick="window.closeStreetView()" class="absolute -top-12 right-0 text-white hover:text-gray-300 text-2xl font-bold transition-colors">✕ Cerrar</button>
-                <img id="streetViewImage" src="" alt="Street View" class="w-full h-auto rounded-lg">
-            </div>
-        `;
-        document.body.appendChild(modal);
-    }
-    
-    const img = modal.querySelector('#streetViewImage');
-    img.src = parada.street_view;
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-};
 
-/**
- * Cierra el modal de street view
- */
-window.closeStreetView = () => {
-    const modal = document.getElementById('streetViewModal');
-    if (modal) {
-        modal.classList.remove('active');
-        document.body.style.overflow = '';
-    }
+    // Abrir enlace de Google Maps en nueva pestaña
+    window.open(parada.street_view, '_blank', 'noopener,noreferrer');
 };
-
-// Cerrar modal con tecla Escape
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        window.closeStreetView();
-    }
-});
