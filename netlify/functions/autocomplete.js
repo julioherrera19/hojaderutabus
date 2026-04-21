@@ -5,16 +5,17 @@ const rateLimitCache = {};
 
 exports.handler = async (event, context) => {
   const { q, limit = 5 } = event.queryStringParameters || {};
-  const clientIp = event.headers['client-ip'] || 'unknown';
+  const clientIp = event.headers['client-ip'] || event.headers['x-nf-client-connection-ip'] || 'unknown';
   const now = Date.now();
+
+  console.log(`[Autocomplete] Query: "${q}" for IP: ${clientIp}`);
 
   // 1. Validar Rate Limit (Máx 15 peticiones por minuto por IP)
   if (!rateLimitCache[clientIp]) rateLimitCache[clientIp] = [];
-  
-  // Limpiar peticiones antiguas (> 1 min)
   rateLimitCache[clientIp] = rateLimitCache[clientIp].filter(time => now - time < 60000);
 
   if (rateLimitCache[clientIp].length >= 15) {
+    console.error(`[Autocomplete] Rate limit hit for IP: ${clientIp}`);
     return {
       statusCode: 429,
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
@@ -35,6 +36,8 @@ exports.handler = async (event, context) => {
 
   try {
     const localResults = searchLocalData(q, limit);
+    console.log(`[Autocomplete] Local results found: ${localResults.length}`);
+    
     if (localResults.length >= 3) {
       return {
         statusCode: 200,
@@ -43,7 +46,13 @@ exports.handler = async (event, context) => {
       };
     }
 
+    const token = process.env.LOCATIONIQ_TOKEN;
+    if (!token) {
+        console.error('[Autocomplete] ERROR: No LOCATIONIQ_TOKEN found in process.env');
+    }
+
     const fallbackResults = await searchWithLocationIQ(q, limit);
+    console.log(`[Autocomplete] API results found: ${fallbackResults.length}`);
     const combinedResults = [...localResults];
     const uniqueNames = new Set(localResults.map(item => item.nombre));
     

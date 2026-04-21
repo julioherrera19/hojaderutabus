@@ -3,6 +3,9 @@
   publish = "."
   functions = "netlify/functions"
 
+[functions]
+  included_files = ["paradas.json"]
+
 [template.environment]
   LOCATIONIQ_TOKEN = "Tu token de LocationIQ"
 
