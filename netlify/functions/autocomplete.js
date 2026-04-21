@@ -9,12 +9,13 @@ exports.handler = async (event, context) => {
   const now = Date.now();
 
   console.log(`[Autocomplete] Query: "${q}" for IP: ${clientIp}`);
+  console.log(`[Debug] Env keys found: ${Object.keys(process.env).filter(k => k.includes('TOKEN') || k.includes('KEY')).join(', ')}`);
 
-  // 1. Validar Rate Limit (Máx 15 peticiones por minuto por IP)
+  // 1. Validar Rate Limit (Máx 30 peticiones por minuto por IP)
   if (!rateLimitCache[clientIp]) rateLimitCache[clientIp] = [];
   rateLimitCache[clientIp] = rateLimitCache[clientIp].filter(time => now - time < 60000);
 
-  if (rateLimitCache[clientIp].length >= 15) {
+  if (rateLimitCache[clientIp].length >= 30) {
     console.error(`[Autocomplete] Rate limit hit for IP: ${clientIp}`);
     return {
       statusCode: 429,

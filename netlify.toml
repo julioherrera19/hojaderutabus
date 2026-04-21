@@ -6,9 +6,6 @@
 [functions]
   included_files = ["paradas.json"]
 
-[template.environment]
-  LOCATIONIQ_TOKEN = "Tu token de LocationIQ"
-
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
