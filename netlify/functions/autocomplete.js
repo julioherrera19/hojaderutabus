@@ -47,9 +47,9 @@ exports.handler = async (event, context) => {
       };
     }
 
-    const token = process.env.LOCATIONIQ_TOKEN;
+    const token = process.env.LOCATIONIQ_TOKEN || process.env.LOCATIONIQ_API_KEY;
     if (!token) {
-        console.error('[Autocomplete] ERROR: No LOCATIONIQ_TOKEN found in process.env');
+        console.error('[Autocomplete] ERROR: No LOCATIONIQ_TOKEN or LOCATIONIQ_API_KEY found in process.env');
     }
 
     const fallbackResults = await searchWithLocationIQ(q, limit);

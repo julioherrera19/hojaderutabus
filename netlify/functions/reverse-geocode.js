@@ -22,7 +22,7 @@ exports.handler = async (event, context) => {
   if (!lat || !lon) return { statusCode: 400, body: 'Missing lat/lon' };
 
   try {
-    const token = process.env.LOCATIONIQ_TOKEN;
+    const token = process.env.LOCATIONIQ_TOKEN || process.env.LOCATIONIQ_API_KEY;
     const url = `https://us1.locationiq.com/v1/reverse.php?key=${token}&lat=${lat}&lon=${lon}&format=json&accept-language=es`;
     
     const response = await fetch(url);

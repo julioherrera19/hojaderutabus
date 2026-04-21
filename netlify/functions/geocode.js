@@ -21,6 +21,16 @@ exports.handler = async (event, context) => {
   }
   rateLimitCache[clientIp].push(now);
 
+  const token = process.env.LOCATIONIQ_TOKEN || process.env.LOCATIONIQ_API_KEY;
+
+  if (!token) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: 'TOKEN de LocationIQ no configurado' }),
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+    };
+  }
+
   if (!q) {
     return {
       statusCode: 400,
@@ -71,7 +81,7 @@ function searchLocalData(query, limit) {
 }
 
 async function geocodeWithLocationIQ(query, limit) {
-  const token = process.env.LOCATIONIQ_TOKEN;
+  const token = process.env.LOCATIONIQ_TOKEN || process.env.LOCATIONIQ_API_KEY;
   if (!token) return [];
 
   try {
