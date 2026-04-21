@@ -99,8 +99,9 @@ function searchFromCache(query) {
         };
     }
 
-    // BÃºsqueda parcial (ej: "madrid" matchea "comunidad de madrid")
+    // BÃºsqueda parcial desactivada para evitar el fallo del centro de ciudad
     return null;
+}
 
 /**
  * Geocodifica una direcciÃ³n usando la funciÃ³n Netlify
