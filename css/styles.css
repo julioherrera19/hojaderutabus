@@ -167,3 +167,43 @@ body {
     -ms-overflow-style: none;
     scrollbar-width: none;
 }
+
+/* ===================================
+   Autocompletado
+   =================================== */
+.autocomplete-container {
+    position: relative;
+}
+
+.autocomplete-list {
+    z-index: 100;
+    border-radius: 0.75rem; /* rounded-xl */
+    max-height: 240px; /* max-h-60 */
+    overflow-y: auto;
+}
+
+.autocomplete-item {
+    cursor: pointer;
+    border-bottom-width: 1px;
+    padding: 0.75rem; /* p-3 */
+}
+
+.autocomplete-item:last-child {
+    border-bottom-width: 0;
+}
+
+.autocomplete-item:hover {
+    background-color: #f3f4f6; /* hover:bg-gray-100 */
+}
+
+.dark .autocomplete-item:hover {
+    background-color: #374151; /* dark:hover:bg-gray-700 */
+}
+
+.autocomplete-item.selected {
+    background-color: #f3f4f6; /* bg-gray-100 */
+}
+
+.dark .autocomplete-item.selected {
+    background-color: #374151; /* dark:bg-gray-700 */
+}

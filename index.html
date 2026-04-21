@@ -168,45 +168,52 @@
                     <div class="carousel-slide active absolute inset-0 bg-black">
                         <video class="w-full h-full object-cover" autoplay muted loop playsinline poster="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=1200&auto=format&fit=crop">
                             <source src="assets/videos/comida.mp4" type="video/mp4">
-                            Tu navegador no soporta la reproducción de video.
                         </video>
                         <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent flex items-end">
-                            <p class="text-lg sm:text-xl font-semibold text-white p-6">
-                                🍽️ ¿Sabes que nos invitan a comer en las áreas de servicio?
-                            </p>
+                            <p class="text-lg sm:text-xl font-semibold text-white p-6">🍽️ ¿Sabes que nos invitan a comer en las áreas de servicio?</p>
                         </div>
                     </div>
-                    <!-- Slide 2: Actualización 37 áreas -->
+                    <!-- Slide 2: NUEVO Precisión GPS -->
                     <div class="carousel-slide absolute inset-0">
-                        <img src="assets/img/actualizacion_37_areas.webp" alt="Autocar en área de servicio" class="carousel-image">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent flex items-end">
-                            <p class="text-lg sm:text-xl font-semibold text-white p-6">🎉 El mapa crece: 37 áreas de servicio en total a disposición de todos.</p>
+                        <img src="assets/img/carrusel_gps.webp" alt="Precisión GPS" class="carousel-image">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end">
+                            <div class="p-6">
+                                <span class="bg-bus-yellow text-blue-900 text-xs font-bold px-2 py-1 rounded mb-2 inline-block shadow-sm">NUEVO</span>
+                                <p class="text-lg sm:text-xl font-semibold text-white">🎯 Nueva precisión GPS: Usa tu ubicación actual y ahorra tiempo.</p>
+                            </div>
                         </div>
                     </div>
-                    <!-- Slide 3 -->
+                    <!-- Slide 3: 37 áreas -->
                     <div class="carousel-slide absolute inset-0">
-                        <img src="assets/img/abades_lodares_carrusel_2.jpg" alt="Área de Servicio Abades Lodares" class="carousel-image">
+                        <img src="assets/img/actualizacion_37_areas.webp" alt="37 áreas" class="carousel-image">
                         <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent flex items-end">
-                            <p class="text-lg sm:text-xl font-semibold text-white p-6">☕ Descubre donde comer con tranquilidad.</p>
+                            <p class="text-lg sm:text-xl font-semibold text-white p-6">🎉 El mapa crece: 37 áreas de servicio en total.</p>
                         </div>
                     </div>
                     <!-- Slide 4 -->
                     <div class="carousel-slide absolute inset-0">
-                        <img src="assets/img/carrusel_3.webp" alt="Autocares en carretera" class="carousel-image">
+                        <img src="assets/img/abades_lodares_carrusel_2.jpg" alt="Abades Lodares" class="carousel-image">
                         <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent flex items-end">
-                            <p class="text-lg sm:text-xl font-semibold text-white p-6">🅿️ Parkings verificados para autocares.</p>
+                            <p class="text-lg sm:text-xl font-semibold text-white p-6">☕ Descubre donde comer con tranquilidad.</p>
                         </div>
                     </div>
                     <!-- Slide 5 -->
                     <div class="carousel-slide absolute inset-0">
-                        <img src="assets/img/1area-de-servicio-01.jpg" alt="Señal de área de servicio en autopista" class="carousel-image">
+                        <img src="assets/img/carrusel_3.webp" alt="Autocares" class="carousel-image">
                         <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent flex items-end">
-                            <p class="text-lg sm:text-xl font-semibold text-white p-6">🚌 Encuentra la parada perfecta para tu ruta.</p>
+                            <p class="text-lg sm:text-xl font-semibold text-white p-6">🅿️ Parkings verificados para autocares.</p>
                         </div>
                     </div>
                     <!-- Slide 6 -->
                     <div class="carousel-slide absolute inset-0">
-                        <img src="assets/img/comparte.png" alt="Autocar aparcado compartiendo ubicación" class="carousel-image">
+                        <img src="assets/img/1area-de-servicio-01.jpg" alt="Señal" class="carousel-image">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent flex items-end">
+                            <p class="text-lg sm:text-xl font-semibold text-white p-6">🚌 Encuentra la parada perfecta para tu ruta.</p>
+                        </div>
+                    </div>
+                    <!-- Slide 7 -->
+                    <div class="carousel-slide absolute inset-0">
+                        <img src="assets/img/comparte.png" alt="Comparte" class="carousel-image">
                         <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent flex items-end">
                             <p class="text-lg sm:text-xl font-semibold text-white p-6">🤝 Comparte tus paradas favoritas con la comunidad.</p>
                         </div>
@@ -215,11 +222,12 @@
                 <!-- Indicadores -->
                 <div class="flex justify-center gap-2 pb-4 pt-3">
                     <button class="carousel-dot w-3 h-3 rounded-full bg-bus-yellow transition-all" data-slide="0" aria-label="Video"></button>
-                    <button class="carousel-dot w-3 h-3 rounded-full bg-gray-300 dark:bg-gray-600 transition-all" data-slide="1" aria-label="Actualización 37 áreas"></button>
-                    <button class="carousel-dot w-3 h-3 rounded-full bg-gray-300 dark:bg-gray-600 transition-all" data-slide="2" aria-label="Slide 3"></button>
+                    <button class="carousel-dot w-3 h-3 rounded-full bg-gray-300 dark:bg-gray-600 transition-all" data-slide="1" aria-label="GPS"></button>
+                    <button class="carousel-dot w-3 h-3 rounded-full bg-gray-300 dark:bg-gray-600 transition-all" data-slide="2" aria-label="Actualización"></button>
                     <button class="carousel-dot w-3 h-3 rounded-full bg-gray-300 dark:bg-gray-600 transition-all" data-slide="3" aria-label="Slide 4"></button>
                     <button class="carousel-dot w-3 h-3 rounded-full bg-gray-300 dark:bg-gray-600 transition-all" data-slide="4" aria-label="Slide 5"></button>
                     <button class="carousel-dot w-3 h-3 rounded-full bg-gray-300 dark:bg-gray-600 transition-all" data-slide="5" aria-label="Slide 6"></button>
+                    <button class="carousel-dot w-3 h-3 rounded-full bg-gray-300 dark:bg-gray-600 transition-all" data-slide="6" aria-label="Slide 7"></button>
                 </div>
             </div>
         </div>
@@ -348,10 +356,60 @@
         <div id="listContainer" class="space-y-4"></div>
     </main>
 
-    <!-- Mapa -->
+    <!-- Mapa con Planificador de Rutas -->
     <section id="mapa-section" class="section-content max-w-6xl mx-auto px-4 py-8">
         <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4">🗺️ Mapa de Áreas de Servicio</h2>
-        <div id="map"></div>
+        
+        <!-- Planificador de Rutas (integrado en el mapa) -->
+        <div class="bg-gradient-to-r from-bus-blue/10 to-bus-green/10 dark:from-gray-800 dark:to-gray-800 rounded-2xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700 mb-4">
+            <div class="flex flex-col sm:flex-row gap-3">
+                <div class="flex-1 relative">
+                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Origen</label>
+                    <div class="relative">
+                        <input type="text" id="routeOrigin" placeholder="Ej: Madrid, Barcelona..." class="w-full p-3 pl-10 pr-10 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-bus-blue focus:border-transparent transition-all">
+                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        <button id="useCurrentLocation" class="absolute right-3 top-1/2 -translate-y-1/2 text-bus-blue hover:scale-110 transition-transform p-1" title="Usar mi ubicación actual">
+                            🎯
+                        </button>
+                    </div>
+                </div>
+                <div class="flex items-end justify-center sm:pb-2">
+                    <span class="text-2xl text-gray-400">→</span>
+                </div>
+                <div class="flex-1 relative">
+                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Destino</label>
+                    <input type="text" id="routeDest" placeholder="Ej: Valencia, Sevilla..." class="w-full p-3 pl-10 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-bus-green focus:border-transparent transition-all">
+                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                </div>
+                <button id="findRouteBtn" class="mt-auto px-6 py-3 bg-gradient-to-r from-bus-blue to-bus-green text-white rounded-xl font-semibold btn-touch hover:opacity-90 transition-opacity flex items-center gap-2">
+                    <span>Buscar</span>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Resultados de ruta -->
+            <div id="routeResults" class="hidden mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div class="flex items-center justify-between mb-3">
+                    <p id="routeSummary" class="text-sm font-medium text-gray-700 dark:text-gray-300"></p>
+                    <a id="googleMapsLink" href="#" target="_blank" rel="noopener" class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded font-medium transition-colors flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                        Google Maps
+                    </a>
+                </div>
+                <div id="routeInfo" class="mb-3"></div>
+                <div id="routeStopsList" class="space-y-2"></div>
+            </div>
+        </div>
+
+        <div id="map" class="rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700"></div>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-3 text-center">Haz clic en un marcador para ver los detalles. Usa el zoom para explorar.</p>
     </section>
 

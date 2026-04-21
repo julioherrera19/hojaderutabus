@@ -1,0 +1,15 @@
+[build]
+  command = "echo 'No build command needed'"
+  publish = "."
+  functions = "netlify/functions"
+
+[template.environment]
+  LOCATIONIQ_TOKEN = "Tu token de LocationIQ"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+[dev]
+  framework = "#static"

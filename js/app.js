@@ -13,13 +13,18 @@ import { initMap, updateMapMarkers } from './modules/map.js';
 import { initSubmissions, initSocialLinks } from './modules/submissions.js';
 import { initFoodGallery } from './modules/food-gallery.js';
 import { loadParadas } from './modules/data.js';
+import { initRoutePlanner } from './modules/route-planner-ui.js';
+import { initCache } from './modules/cache.js';
 
 /**
  * Inicializa la aplicación
  */
 async function initApp() {
     console.log('🚌 Iniciando Hoja de Ruta Bus...');
-    
+
+    // 0. Inicializar caché (antes de nada)
+    initCache();
+
     // 1. Inicializar tema (antes de renderizar)
     initTheme();
     
@@ -35,6 +40,7 @@ async function initApp() {
     initSubmissions();
     initSocialLinks();
     initFoodGallery();
+    initRoutePlanner();
     
     // 4. Renderizar contenido inicial
     renderCards();

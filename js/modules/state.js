@@ -4,19 +4,21 @@
 export const state = {
     // Datos
     paradas: [],
-    
+
     // Filtros
     currentFilter: 'all',
     searchQuery: '',
-    
+
     // Carousel
     currentSlide: 0,
     carouselInterval: null,
-    
+
     // Mapa
     map: null,
     mapMarkers: [],
-    
+    routeLine: null,
+    routeMarkers: [],
+
     // Envíos de formulario
     submissions: [],
 };
@@ -32,5 +34,7 @@ export function initState() {
     state.carouselInterval = null;
     state.map = null;
     state.mapMarkers = [];
+    state.routeLine = null;
+    state.routeMarkers = [];
     state.submissions = [];
 }

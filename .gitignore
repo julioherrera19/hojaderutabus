@@ -38,3 +38,6 @@ venv/
 # Temporales
 *.tmp
 *.bak
+
+# Local Netlify folder
+.netlify
