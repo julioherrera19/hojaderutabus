@@ -85,13 +85,21 @@ function searchLocalData(query, limit) {
 }
 
 async function searchWithLocationIQ(query, limit) {
-  const token = process.env.LOCATIONIQ_TOKEN;
+  const token = process.env.LOCATIONIQ_TOKEN || process.env.LOCATIONIQ_API_KEY;
   if (!token) return [];
 
   try {
     const url = `https://us1.locationiq.com/v1/autocomplete.php?key=${token}&q=${encodeURIComponent(query)}&limit=${limit}&format=json&countrycodes=es&accept-language=es`;
     const response = await fetch(url);
+    
+    if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[Autocomplete] API Error (${response.status}): ${errorText}`);
+        return [];
+    }
+    
     const data = await response.json();
+    if (!Array.isArray(data)) return [];
 
     return data.map((item, index) => {
       // Simplificar dirección: "Calle, Numero, Ciudad"
