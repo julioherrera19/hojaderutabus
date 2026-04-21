@@ -10,7 +10,7 @@ exports.handler = async (event, context) => {
   if (!rateLimitCache[clientIp]) rateLimitCache[clientIp] = [];
   rateLimitCache[clientIp] = rateLimitCache[clientIp].filter(t => now - t < 60000);
 
-  if (rateLimitCache[clientIp].length >= 10) {
+  if (rateLimitCache[clientIp].length >= 100) {
     return {
       statusCode: 429,
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
