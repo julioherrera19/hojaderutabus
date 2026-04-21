@@ -46,8 +46,11 @@ function setupGpsButton() {
             const { latitude, longitude } = position.coords;
             
             // 1. Guardar coordenadas exactas
+            const defaultLabel = "📍 Ubicación actual";
+            
+            // 1. Guardar coordenadas exactas
             selectedOrigin = {
-                nombre: "Mi ubicación actual",
+                nombre: defaultLabel,
                 lat: latitude,
                 lng: longitude,
                 tipo: 'gps'
@@ -63,10 +66,12 @@ function setupGpsButton() {
                     originInput.value = address;
                     selectedOrigin.nombre = address;
                 } else {
-                    originInput.value = "📍 Ubicación actual";
+                    originInput.value = defaultLabel;
+                    selectedOrigin.nombre = defaultLabel;
                 }
             } catch (err) {
-                originInput.value = "📍 Ubicación actual";
+                originInput.value = defaultLabel;
+                selectedOrigin.nombre = defaultLabel;
             } finally {
                 gpsBtn.classList.remove('animate-pulse');
             }
@@ -143,9 +148,12 @@ async function handleFindRoute() {
     setLoading(true);
 
     try {
-        // Priorizar el objeto seleccionado (coordenadas exactas) sobre el texto
-        const originSource = selectedOrigin && selectedOrigin.nombre === originVal ? selectedOrigin : originVal;
-        const destSource = selectedDest && selectedDest.nombre === destVal ? selectedDest : destVal;
+        // Priorizar el objeto seleccionado si el texto coincide o si es una ubicación GPS
+        const isGpsOrigin = selectedOrigin && originVal.startsWith('📍');
+        const originSource = (isGpsOrigin || (selectedOrigin && selectedOrigin.nombre === originVal)) ? selectedOrigin : originVal;
+        
+        const isGpsDest = selectedDest && destVal.startsWith('📍');
+        const destSource = (isGpsDest || (selectedDest && selectedDest.nombre === destVal)) ? selectedDest : destVal;
 
         const result = await getStopsOnRoute(originSource, destSource, state.paradas, 15);
         showRouteResults(result);
