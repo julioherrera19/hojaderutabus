@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asistente de Convenio | Hoja de Ruta</title>
+    
+    <!-- Tailwind para estructura -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Netlify Identity Widget -->
+    <script type="text/javascript" src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+        
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #f8fafc;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .dark body { background: #0f172a; }
+
+        /* Estilo de burbujas */
+        .msg-ai {
+            background: #ffffff;
+            border-radius: 0 1.25rem 1.25rem 1.25rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .dark .msg-ai { background: #1e293b; color: #f1f5f9; box-shadow: none; }
+
+        .msg-user {
+            background: #fbbf24;
+            color: #1e293b;
+            border-radius: 1.25rem 1.25rem 0 1.25rem;
+            font-weight: 500;
+        }
+
+        /* Glassmorphism sidebar */
+        .glass-sidebar {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(0,0,0,0.05);
+        }
+        .dark .glass-sidebar {
+            background: rgba(15, 23, 42, 0.8);
+            border-color: rgba(255,255,255,0.05);
+        }
+
+        /* Typing animation */
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: #94a3b8;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        /* Custom Scrollbar */
+        #chat-history::-webkit-scrollbar { width: 6px; }
+        #chat-history::-webkit-scrollbar-track { background: transparent; }
+        #chat-history::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .dark #chat-history::-webkit-scrollbar-thumb { background: #334155; }
+
+        .auth-wall {
+            background: rgba(248, 250, 252, 0.9);
+            backdrop-filter: blur(8px);
+            z-index: 50;
+        }
+        .dark .auth-wall { background: rgba(15, 23, 42, 0.9); }
+    </style>
+</head>
+<body class="flex flex-col md:flex-row h-screen">
+
+    <!-- Sidebar (Desktop) -->
+    <aside class="hidden md:flex flex-col w-72 glass-sidebar p-6 relative">
+        <div class="flex items-center gap-3 mb-8">
+            <span class="text-3xl">🚌</span>
+            <h1 class="font-extrabold text-xl text-slate-800 dark:text-white leading-tight">Hoja de <br>Ruta AI</h1>
+        </div>
+
+        <nav class="flex-1 space-y-4">
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-widest pl-2">Acceso Rápido</div>
+            <a href="/" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-300 font-medium">
+                <span>🏠</span> Volver al Mapa
+            </a>
+            <div class="p-4 rounded-2xl bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-100 dark:border-yellow-900/30">
+                <p class="text-xs text-yellow-700 dark:text-yellow-400 leading-relaxed font-medium">
+                    🔍 Esta IA consulta los convenios colectivos actuales para darte respuestas precisas.
+                </p>
+            </div>
+        </nav>
+
+        <div id="user-profile" class="mt-auto pt-6 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center font-bold text-slate-800" id="user-avatar">?</div>
+                <div class="text-sm">
+                    <p class="font-bold text-slate-800 dark:text-white" id="user-name">Invitado</p>
+                    <button class="text-xs text-blue-500 hover:underline" id="logout-btn">Cerrar sesión</button>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Chat Area -->
+    <main class="flex-1 flex flex-col relative bg-white/50 dark:bg-slate-900/50">
+        <!-- Auth Wall -->
+        <div id="auth-wall" class="auth-wall absolute inset-0 flex items-center justify-center p-6 hidden">
+            <div class="max-w-md w-full text-center bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-700">
+                <div class="text-5xl mb-6">🔒</div>
+                <h2 class="text-2xl font-bold mb-3 dark:text-white">Área Exclusiva</h2>
+                <p class="text-slate-500 dark:text-slate-400 mb-8">Para consultar el asistente experto en convenios debes estar identificado.</p>
+                <div class="space-y-3">
+                    <button id="login-btn" class="w-full py-4 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl font-bold hover:scale-105 transition-transform flex items-center justify-center gap-3">
+                        <span>Identificarse con Netlify</span>
+                    </button>
+                    <p class="text-[11px] text-slate-400 uppercase">📧 Soporta Correo y Google Auth</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Header (Mobile Only) -->
+        <header class="md:hidden p-4 glass-sidebar flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="text-2xl">🚌</span>
+                <span class="font-bold dark:text-white text-sm">Hoja de Ruta AI</span>
+            </div>
+            <div class="flex items-center gap-4">
+               <a href="/" class="text-xl">🏠</a>
+               <button id="mobile-logout-btn" class="text-xs text-slate-500">Salir</button>
+            </div>
+        </header>
+
+        <!-- Messages History -->
+        <div id="chat-history" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
+            <!-- Msgs injection -->
+        </div>
+
+        <!-- Input Area -->
+        <footer class="p-4 md:p-8">
+            <div class="max-w-3xl mx-auto relative">
+                <!-- Typing Indicator -->
+                <div id="typing-indicator" class="absolute -top-10 left-4 hidden flex items-center gap-2 text-xs text-slate-400">
+                    <div class="flex gap-1">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                    <span>Consultando bases legales...</span>
+                </div>
+
+                <form id="chat-form" class="flex gap-3">
+                    <div class="flex-1 relative">
+                        <input type="text" id="chat-input" placeholder="Pregunta sobre descansos, dietas, horas extras..." 
+                            class="w-full p-4 md:p-5 pr-14 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 shadow-sm transition-all" autocomplete="off">
+                    </div>
+                    <button type="submit" class="p-4 md:p-5 bg-yellow-400 text-slate-800 rounded-2xl md:rounded-3xl hover:scale-105 transition-transform shadow-lg shadow-yellow-400/20">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                    </button>
+                </form>
+                <div class="mt-3 text-center">
+                    <p class="text-[10px] text-slate-400 uppercase tracking-tighter">IA Formada con el Convenio Colectivo de Transporte por Carretera</p>
+                </div>
+            </div>
+        </footer>
+    </main>
+
+    <script>
+        const ChatApp = {
+            init() {
+                this.cacheDOM();
+                this.initIdentity();
+                this.bindEvents();
+                this.renderWelcome();
+            },
+
+            cacheDOM() {
+                this.history = document.getElementById('chat-history');
+                this.form = document.getElementById('chat-form');
+                this.input = document.getElementById('chat-input');
+                this.typing = document.getElementById('typing-indicator');
+                this.authWall = document.getElementById('auth-wall');
+                this.loginBtn = document.getElementById('login-btn');
+                this.logoutBtn = document.getElementById('logout-btn');
+                this.mobileLogout = document.getElementById('mobile-logout-btn');
+                this.userName = document.getElementById('user-name');
+                this.userAvatar = document.getElementById('user-avatar');
+            },
+
+            initIdentity() {
+                if (window.netlifyIdentity) {
+                    window.netlifyIdentity.init();
+                    
+                    const currentUser = window.netlifyIdentity.currentUser();
+                    this.handleAuth(currentUser);
+
+                    window.netlifyIdentity.on('login', user => {
+                        this.handleAuth(user);
+                        window.netlifyIdentity.close();
+                    });
+                    window.netlifyIdentity.on('logout', () => this.handleAuth(null));
+                }
+            },
+
+            handleAuth(user) {
+                const isLoggedIn = !!user;
+                this.authWall.classList.toggle('hidden', isLoggedIn);
+                
+                if (isLoggedIn) {
+                    const name = user.user_metadata?.full_name || user.email.split('@')[0];
+                    this.userName.textContent = name;
+                    this.userAvatar.textContent = name.charAt(0).toUpperCase();
+                } else {
+                    this.userName.textContent = 'Invitado';
+                    this.userAvatar.textContent = '?';
+                }
+            },
+
+            bindEvents() {
+                this.loginBtn.addEventListener('click', () => netlifyIdentity.open());
+                this.logoutBtn.addEventListener('click', () => netlifyIdentity.logout());
+                this.mobileLogout?.addEventListener('click', () => netlifyIdentity.logout());
+                this.form.addEventListener('submit', e => {
+                    e.preventDefault();
+                    this.processUserMsg();
+                });
+            },
+
+            renderWelcome() {
+                this.addMessage("ai", "Bienvenido al Asistente de Convenio. Estoy aquí para aclarar tus dudas sobre normativa, descansos, salarios o cualquier punto del convenio de transporte. ¿En qué puedo ayudarte?");
+            },
+
+            addMessage(role, text, sources = []) {
+                const msgDiv = document.createElement('div');
+                msgDiv.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`;
+                
+                const content = `
+                    <div class="max-w-[85%] md:max-w-2xl p-4 md:p-5 rounded-2xl ${role === 'ai' ? 'msg-ai' : 'msg-user shadow-md'} relative">
+                        <div class="text-sm md:text-base leading-relaxed whitespace-pre-line">${role === 'ai' ? '🤖 ' : '👤 '}${text}</div>
+                        ${sources && sources.length > 0 ? `
+                            <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700 flex flex-wrap gap-2">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase w-full">Referencias en el convenio:</span>
+                                ${sources.map(s => `<span class="bg-slate-50 dark:bg-slate-900/50 px-2 py-1 rounded text-[10px] font-mono border border-slate-200 dark:border-slate-800 text-slate-500">Pág. ${s.pagina} (Confianza: ${Math.round(s.score * 100)}%)</span>`).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+                
+                msgDiv.innerHTML = content;
+                this.history.appendChild(msgDiv);
+                this.history.scrollTop = this.history.scrollHeight;
+            },
+
+            async processUserMsg() {
+                const question = this.input.value.trim();
+                const user = netlifyIdentity.currentUser();
+
+                if (!question || !user) return;
+
+                this.addMessage("user", question);
+                this.input.value = '';
+                this.typing.classList.remove('hidden');
+
+                try {
+                    const token = await user.jwt();
+                    const response = await fetch('/api/rag', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ pregunta: question })
+                    });
+
+                    const data = await response.json();
+                    this.typing.classList.add('hidden');
+
+                    if (data.error) throw new Error(data.error);
+                    
+                    this.addMessage("ai", data.respuesta, data.fuentes);
+                } catch (err) {
+                    this.typing.classList.add('hidden');
+                    this.addMessage("ai", "⚠️ Lo siento, he tenido un problema técnico al consultar el convenio. ¿Puedes intentarlo de nuevo?");
+                    console.error("Chat Error:", err);
+                }
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => ChatApp.init());
+    </script>
+</body>
+</html>
