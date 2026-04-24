@@ -1,45 +1,37 @@
 import { getStore } from '@netlify/blobs';
-import { pipeline, env } from '@xenova/transformers';
+import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 
-// Configuración para entorno serverless (Evita error de path/fileURLToPath)
-env.allowLocalModels = false;
-env.useBrowserCache = false;
+// Configuración de Embeddings de Google (Query del usuario)
+const embeddings = new GoogleGenerativeAIEmbeddings({
+  apiKey: process.env.GEMINI_API_KEY,
+  modelName: "text-embedding-004",
+});
 
 let vectorStoreCache = null;
-let embedder = null;
 
+/**
+ * Recupera el almacén de vectores desde Netlify Blobs.
+ * Se asume que el almacén contiene los textos y sus embeddings generados con Gemini.
+ */
 async function getVectorStore() {
   if (vectorStoreCache) return vectorStoreCache;
   
   const store = getStore('vectorstore');
-  
-  // Leer el índice FAISS (lo usaremos más tarde)
-  const indexBuffer = await store.get('faiss.index', { type: 'arrayBuffer' });
   const metadatosStr = await store.get('metadatos.json', { type: 'text' });
-  const metadatos = JSON.parse(metadatosStr);
   
-  vectorStoreCache = { indexBuffer, metadatos };
+  if (!metadatosStr) {
+    throw new Error("No se encontró el almacén de vectores en Blobs.");
+  }
+  
+  vectorStoreCache = JSON.parse(metadatosStr);
   return vectorStoreCache;
 }
 
-async function getEmbedder() {
-  if (!embedder) {
-    embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
-  }
-  return embedder;
-}
-
-async function generateEmbedding(text) {
-  const embed = await getEmbedder();
-  const result = await embed(text, { pooling: 'mean', normalize: true });
-  return Array.from(result.data);
-}
-
-// Búsqueda por similitud de coseno (sin FAISS-node)
+/**
+ * Cálculo manual de similitud de coseno para evitar dependencias nativas (FAISS) en Lambda.
+ */
 function cosineSimilarity(vecA, vecB) {
-  let dot = 0;
-  let normA = 0;
-  let normB = 0;
+  let dot = 0; let normA = 0; let normB = 0;
   for (let i = 0; i < vecA.length; i++) {
     dot += vecA[i] * vecB[i];
     normA += vecA[i] * vecA[i];
@@ -48,32 +40,8 @@ function cosineSimilarity(vecA, vecB) {
   return dot / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
-async function searchSimilarChunks(queryEmbedding, metadatos, topK = 3) {
-  // Generar embeddings para todos los chunks (solo la primera vez)
-  if (!metadatos.embeddings) {
-    console.log('Generando embeddings para los chunks...');
-    const embedder = await getEmbedder();
-    const embeddings = [];
-    for (const texto of metadatos.textos) {
-      const result = await embedder(texto, { pooling: 'mean', normalize: true });
-      embeddings.push(Array.from(result.data));
-    }
-    metadatos.embeddings = embeddings;
-  }
-  
-  // Calcular similitud con cada chunk
-  const scores = [];
-  for (let i = 0; i < metadatos.textos.length; i++) {
-    const sim = cosineSimilarity(queryEmbedding, metadatos.embeddings[i]);
-    scores.push({ index: i, score: sim });
-  }
-  
-  // Ordenar por similitud (mayor primero)
-  scores.sort((a, b) => b.score - a.score);
-  return scores.slice(0, topK);
-}
+// --- Proveedores de Inferencia ---
 
-// Proveedores LLM
 async function callGroq(contexto, pregunta) {
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
@@ -84,12 +52,13 @@ async function callGroq(contexto, pregunta) {
     body: JSON.stringify({
       model: 'llama-3.1-8b-instant',
       messages: [
-        { role: 'system', content: 'Eres experto en convenios colectivos de transporte. Compara y recomienda la mejor opción. Responde en español.' },
+        { role: 'system', content: 'Eres experto en convenios de transporte. Responde de forma concisa usando solo el contexto proporcionado.' },
         { role: 'user', content: `Contexto:\n${contexto}\n\nPregunta: ${pregunta}` }
       ],
-      max_tokens: 500
+      max_tokens: 600
     })
   });
+  if (!response.ok) throw new Error('Groq falló');
   const data = await response.json();
   return data.choices?.[0]?.message?.content;
 }
@@ -102,86 +71,74 @@ async function callOpenRouter(contexto, pregunta) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: 'openrouter/free',
-      messages: [{ role: 'user', content: `Contexto:\n${contexto}\n\nPregunta: ${pregunta}` }],
-      max_tokens: 500
+      model: 'openrouter/free', // O el modelo que prefieras de respaldo
+      messages: [
+        { role: 'system', content: 'Asistente experto en normativa de transporte.' },
+        { role: 'user', content: `Contexto:\n${contexto}\n\nPregunta: ${pregunta}` }
+      ]
     })
   });
+  if (!response.ok) throw new Error('OpenRouter falló');
   const data = await response.json();
   return data.choices?.[0]?.message?.content;
 }
 
-async function callGemini(contexto, pregunta) {
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${process.env.GEMINI_API_KEY}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: `Contexto:\n${contexto}\n\nPregunta: ${pregunta}` }] }]
-    })
-  });
-  const data = await response.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text;
-}
+// --- Handler Principal ---
 
 export async function handler(event, context) {
-  // Auth obligatoria
-  const user = context.clientContext?.user;
-  if (!user) {
-    return {
-      statusCode: 401,
-      body: JSON.stringify({ error: 'No autorizado. Inicia sesión.' })
-    };
+  const identityUser = context.clientContext?.user;
+  if (!identityUser) {
+    return { statusCode: 401, body: JSON.stringify({ error: 'Auth requerida.' }) };
   }
-  
+
   try {
     const { pregunta } = JSON.parse(event.body);
-    if (!pregunta) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'Falta la pregunta' }) };
-    }
-    
-    // 1. Generar embedding de la pregunta
-    const queryEmbedding = await generateEmbedding(pregunta);
-    
-    // 2. Buscar chunks similares
-    const { metadatos } = await getVectorStore();
-    const results = await searchSimilarChunks(queryEmbedding, metadatos, 3);
-    
-    // 3. Construir contexto
-    const contextos = results.map(r => ({
-      texto: metadatos.textos[r.index],
-      pagina: metadatos.paginas[r.index],
+    if (!pregunta) return { statusCode: 400, body: JSON.stringify({ error: 'Falta pregunta' }) };
+
+    // 1. Obtener Embedding de la pregunta vía API de Gemini (LIGERO)
+    const queryEmbedding = await embeddings.embedQuery(pregunta);
+
+    // 2. Cargar base de conocimientos (Vectores + Texto)
+    const { textos, paginas, embeddings: docEmbeddings } = await getVectorStore();
+
+    // 3. Búsqueda de similitud manual
+    const results = docEmbeddings.map((emb, i) => ({
+      index: i,
+      score: cosineSimilarity(queryEmbedding, emb)
+    }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3);
+
+    // 4. Construir contexto
+    const chunksRelvantes = results.map(r => ({
+      texto: textos[r.index],
+      pagina: paginas[r.index],
       score: r.score
     }));
     
-    const contexto = contextos.map(c => `[Pág. ${c.pagina}] ${c.texto.slice(0, 500)}`).join('\n\n');
-    
-    // 4. Llamar a LLM con triple fallback
-    let respuesta = null;
-    const providers = [
-      { name: 'Groq', fn: () => callGroq(contexto, pregunta) },
-      { name: 'OpenRouter', fn: () => callOpenRouter(contexto, pregunta) },
-      { name: 'Gemini', fn: () => callGemini(contexto, pregunta) }
-    ];
-    
-    for (const provider of providers) {
-      try {
-        respuesta = await provider.fn();
-        if (respuesta && !respuesta.includes('error')) break;
-      } catch (e) {
-        console.log(`${provider.name} falló:`, e.message);
-      }
+    const contextoStr = chunksRelvantes.map(c => `[Pág. ${c.pagina}] ${c.texto}`).join('\n\n');
+
+    // 5. Inferencia con Fallback (GROQ -> OpenRouter)
+    let respuesta;
+    try {
+      console.log('Intentando con GROQ...');
+      respuesta = await callGroq(contextoStr, pregunta);
+    } catch (err) {
+      console.log('Fallo GROQ, intentando OpenRouter...');
+      respuesta = await callOpenRouter(contextoStr, pregunta);
     }
-    
+
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        respuesta: respuesta || "No se pudo generar respuesta",
-        fuentes: contextos.map(c => ({ pagina: c.pagina, score: c.score }))
+        respuesta,
+        fuentes: chunksRelvantes.map(c => ({ pagina: c.pagina, score: c.score }))
       })
     };
-    
+
   } catch (error) {
+    console.error('Error RAG:', error);
     return {
       statusCode: 500,
       body: JSON.stringify({ error: error.message })
