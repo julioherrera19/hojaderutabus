@@ -77,12 +77,12 @@ export async function handler(event, context) {
     const vector = await getQueryEmbedding(pregunta, process.env.GEMINI_API_KEY);
     const vectorStr = `[${vector.join(',')}]`;
 
-    // 2. Búsqueda en Neon (Ajustado a nuestro esquema real: contenido, pagina)
+    // 2. Búsqueda Vectorial en Neon (Reducimos a Top 2 por límite de tokens)
     const { rows } = await pool.query(
       `SELECT contenido, pagina, (embedding <=> $1::vector) as distance 
        FROM documentos_convenio 
        ORDER BY distance ASC 
-       LIMIT 3`,
+       LIMIT 2`,
       [vectorStr]
     );
 
@@ -93,8 +93,8 @@ export async function handler(event, context) {
       };
     }
 
-    // 3. Construcción de Contexto
-    const contexto = rows.map(r => `[Pág. ${r.pagina}] ${r.contenido}`).join("\n---\n");
+    // 3. Construcción de Contexto con truncado de seguridad (max 2000 carac. por chunk)
+    const contexto = rows.map(r => `[Pág. ${r.pagina}] ${r.contenido.slice(0, 2000)}`).join("\n---\n");
     
     // 4. Inferencia
     const respuesta = await callGroq(contexto, pregunta);
