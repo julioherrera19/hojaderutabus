@@ -1,13 +1,9 @@
 import pg from 'pg';
 
-const { Pool } = pg;
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
+const { Client } = pg;
 
 /**
- * Función de Embeddings con Gemini (3072D)
+ * Función central de Embeddings: gemini-embedding-2
  */
 async function getQueryEmbedding(text, apiKey) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-2:embedContent?key=${apiKey}`;
@@ -24,7 +20,8 @@ async function getQueryEmbedding(text, apiKey) {
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error("Fallo al vectorizar pregunta con Gemini");
+    console.error("Gemini Error:", JSON.stringify(error, null, 2));
+    throw new Error("Fallo al vectorizar la pregunta");
   }
 
   const data = await response.json();
@@ -32,7 +29,33 @@ async function getQueryEmbedding(text, apiKey) {
 }
 
 /**
- * Inferencia con Groq
+ * Búsqueda Vectorial en Neon (Operador <=> de distancia coseno)
+ */
+async function buscarEnNeon(queryVector) {
+  const client = new Client({ 
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
+  });
+  await client.connect();
+  
+  // Transformamos el vector de 3072D en el formato que pgvector entiende
+  const vectorStr = `[${queryVector.join(',')}]`;
+
+  // Magia SQL: Menor distancia <=> Mayor similitud
+  const res = await client.query(
+    `SELECT contenido, pagina, (embedding <=> $1::vector) as distancia 
+     FROM documentos_convenio 
+     ORDER BY distancia ASC 
+     LIMIT 3`, 
+    [vectorStr]
+  );
+  
+  await client.end();
+  return res.rows;
+}
+
+/**
+ * Inferencia Final con Groq
  */
 async function callGroq(contexto, pregunta) {
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -44,8 +67,8 @@ async function callGroq(contexto, pregunta) {
     body: JSON.stringify({
       model: 'llama-3.1-8b-instant',
       messages: [
-        { role: 'system', content: 'Eres un experto en convenios de transporte. Responde usando exclusivamente el contexto. Sé conciso.' },
-        { role: 'user', content: `Contexto:\n${contexto}\n\nPregunta: ${pregunta}` }
+        { role: 'system', content: 'Eres experto en convenios de transporte. Responde usando exclusivamente el contexto proporcionado. Sé profesional y directo.' },
+        { role: 'user', content: `Contexto del Convenio:\n${contexto}\n\nDuda: ${pregunta}` }
       ],
       temperature: 0.1
     })
@@ -55,49 +78,40 @@ async function callGroq(contexto, pregunta) {
 }
 
 /**
- * HANDLER PRINCIPAL (NEON VERSION)
+ * HANDLER PRINCIPAL
  */
 export async function handler(event, context) {
   const user = context.clientContext?.user;
-  if (!user) return { statusCode: 401, body: JSON.stringify({ error: 'Auth requerida' }) };
+  if (!user) return { statusCode: 401, body: JSON.stringify({ error: 'Inicia sesión' }) };
 
   try {
     const { pregunta } = JSON.parse(event.body);
-    if (!pregunta) return { statusCode: 400, body: JSON.stringify({ error: 'Pregunta vacía' }) };
+    if (!pregunta) return { statusCode: 400, body: JSON.stringify({ error: 'Falta pregunta' }) };
 
-    // 1. Vectorizar duda del usuario
+    // 1. Vectorizar la duda del usuario (3072D)
     const queryVector = await getQueryEmbedding(pregunta, process.env.GEMINI_API_KEY);
-    const vectorString = `[${queryVector.join(',')}]`;
 
-    // 2. Búsqueda Vectorial en Neon (pgvector)
-    // El operador <=> calcula la distancia coseno. 1 - distancia = similitud.
-    const query = `
-      SELECT contenido, pagina, 1 - (embedding <=> $1::vector) as similarity
-      FROM documentos_convenio
-      ORDER BY similarity DESC
-      LIMIT 3;
-    `;
-    
-    const { rows } = await pool.query(query, [vectorString]);
+    // 2. Buscar fragmentos relevantes en Postgres (Neon)
+    const fragmentos = await buscarEnNeon(queryVector);
 
-    // 3. Generar respuesta con el contexto recuperado
-    const contexto = rows.map(r => `[Pág. ${r.pagina}] ${r.contenido}`).join('\n\n');
-    const respuesta = await callGroq(contexto, pregunta);
+    // 3. Generar respuesta
+    const contextoStr = fragmentos.map(f => `[Pág. ${f.pagina}] ${f.contenido}`).join('\n\n');
+    const respuesta = await callGroq(contextoStr, pregunta);
 
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         respuesta,
-        fuentes: rows.map(r => ({ pagina: r.pagina, score: r.similarity }))
+        fuentes: fragmentos.map(f => ({ pagina: f.pagina, score: 1 - f.distancia }))
       })
     };
 
   } catch (error) {
-    console.error("Neon RAG Error:", error.message);
+    console.error("Error RAG Neon:", error.message);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: "Error en la consulta. Verifica la base de datos." })
+      body: JSON.stringify({ error: "El servicio de consulta está temporalmente inactivo." })
     };
   }
 }
