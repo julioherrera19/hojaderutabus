@@ -1,37 +1,34 @@
 import { getStore } from '@netlify/blobs';
 
 /**
- * CONFIGURACIÓN DE AI
- * Usamos fetch directo para minimizar el tamaño del paquete y dependencias.
+ * Función para vectorizar la duda del usuario usando Gemini.
+ * Usamos task_type: "RETRIEVAL_QUERY" para optimizar la búsqueda.
  */
-const EMBEDDING_MODEL = "text-embedding-004"; // El modelo de 3072 dimensiones de Google
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${EMBEDDING_MODEL}:embedContent?key=${process.env.GEMINI_API_KEY}`;
-
-let vectorStoreCache = null;
-
-/**
- * Obtiene el embedding de la pregunta usando el modelo de 3072 dimensiones.
- */
-async function getGeminiEmbedding(text) {
-  const response = await fetch(GEMINI_API_URL, {
+async function getQueryEmbedding(text, apiKey) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-2:embedContent?key=${apiKey}`;
+  
+  const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      content: { parts: [{ text }] }
+      model: "models/gemini-embedding-2",
+      content: { parts: [{ text: text }] },
+      task_type: "RETRIEVAL_QUERY"
     })
   });
-  
+
   if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Gemini Embedding Error: ${error}`);
+    const error = await response.json();
+    console.error("Gemini Embedding Error:", JSON.stringify(error, null, 2));
+    throw new Error("Fallo al vectorizar la pregunta");
   }
-  
+
   const data = await response.json();
   return data.embedding.values;
 }
 
 /**
- * Similitud del coseno para comparar la duda con el convenio.
+ * Similitud del coseno (Puro JS - Máximo rendimiento en Lambda)
  */
 function cosineSimilarity(vecA, vecB) {
   let dot = 0, normA = 0, normB = 0;
@@ -44,7 +41,7 @@ function cosineSimilarity(vecA, vecB) {
 }
 
 /**
- * Inferencia con Groq (Respuesta final).
+ * Inferencia final con Groq
  */
 async function callGroq(contexto, pregunta) {
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -56,7 +53,7 @@ async function callGroq(contexto, pregunta) {
     body: JSON.stringify({
       model: 'llama-3.1-8b-instant',
       messages: [
-        { role: 'system', content: 'Eres experto en convenios de transporte. Responde usando exclusivamente el contexto. Sé conciso y profesional.' },
+        { role: 'system', content: 'Eres un experto en convenios de transporte. Responde usando exclusivamente el contexto. Sé conciso y profesional.' },
         { role: 'user', content: `Contexto del Convenio:\n${contexto}\n\nDuda del trabajador: ${pregunta}` }
       ],
       temperature: 0.1
@@ -68,11 +65,13 @@ async function callGroq(contexto, pregunta) {
   return data.choices?.[0]?.message?.content;
 }
 
+let vectorStoreCache = null;
+
 /**
  * HANDLER PRINCIPAL
  */
 export async function handler(event, context) {
-  // 1. Seguridad: Validar usuario de Netlify Identity
+  // 1. Auth check
   const user = context.clientContext?.user;
   if (!user) {
     return { statusCode: 401, body: JSON.stringify({ error: 'Identificación requerida' }) };
@@ -82,10 +81,10 @@ export async function handler(event, context) {
     const { pregunta } = JSON.parse(event.body);
     if (!pregunta) return { statusCode: 400, body: JSON.stringify({ error: 'Pregunta vacía' }) };
 
-    // 2. Obtener Embeddings de la duda (3072 dims)
-    const queryVector = await getGeminiEmbedding(pregunta);
+    // 2. Vectorizar la query con Gemini (3072D)
+    const queryVector = await getQueryEmbedding(pregunta, process.env.GEMINI_API_KEY);
 
-    // 3. Cargar base de datos desde Netlify Blobs (metadatos.json)
+    // 3. Cargar la DB vectorial desde Blobs
     if (!vectorStoreCache) {
       const store = getStore('vectorstore');
       const data = await store.get('metadatos.json', { type: 'text' });
@@ -93,15 +92,15 @@ export async function handler(event, context) {
       vectorStoreCache = JSON.parse(data);
     }
 
-    // 4. Búsqueda de similitud manual (Top 3)
-    const results = vectorStoreCache.map((doc, i) => ({
+    // 4. Búsqueda de similitud top 3
+    const results = vectorStoreCache.map(doc => ({
       ...doc,
       similarity: cosineSimilarity(queryVector, doc.embedding)
     }))
     .sort((a, b) => b.similarity - a.similarity)
     .slice(0, 3);
 
-    // 5. Generar respuesta
+    // 5. Inferencia Final
     const contexto = results.map(r => `[Pág. ${r.pagina}] ${r.texto}`).join('\n\n');
     const respuesta = await callGroq(contexto, pregunta);
 
@@ -118,7 +117,7 @@ export async function handler(event, context) {
     console.error("Error RAG:", error.message);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: "El asistente ha tenido un problema técnico. Inténtalo de nuevo." })
+      body: JSON.stringify({ error: "El asistente está descansando. Inténtalo de nuevo." })
     };
   }
 }
