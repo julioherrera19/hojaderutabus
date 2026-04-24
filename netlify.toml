@@ -5,7 +5,6 @@
 
 [functions]
   node_bundler = "esbuild"
-  external_node_modules = ["@xenova/transformers"]
   included_files = ["paradas.json"]
 
 [[redirects]]
