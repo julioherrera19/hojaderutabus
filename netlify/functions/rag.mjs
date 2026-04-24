@@ -52,7 +52,13 @@ async function callGroq(contexto, pregunta) {
   });
   
   const data = await response.json();
-  return data.choices?.[0]?.message?.content || "No pude procesar la respuesta con Groq.";
+  
+  if (!response.ok) {
+    console.error("Groq API Error:", JSON.stringify(data));
+    return `Error de Groq (${response.status}): ${data.error?.message || "Error desconocido"}`;
+  }
+
+  return data.choices?.[0]?.message?.content || "El modelo no devolvió contenido.";
 }
 
 /**
