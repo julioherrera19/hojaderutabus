@@ -86,7 +86,11 @@ export async function handler(event, context) {
 
     // 3. Cargar la DB vectorial desde Blobs
     if (!vectorStoreCache) {
-      const store = getStore('vectorstore');
+      const store = getStore({
+        name: 'vectorstore',
+        siteID: process.env.NETLIFY_SITE_ID || process.env.SITE_ID,
+        token: process.env.NETLIFY_AUTH_TOKEN || process.env.NETLIFY_API_TOKEN
+      });
       const data = await store.get('metadatos.json', { type: 'text' });
       if (!data) throw new Error("Base de datos vectorial no encontrada en Blobs");
       vectorStoreCache = JSON.parse(data);
