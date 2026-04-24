@@ -1,7 +1,13 @@
-import { getStore } from '@netlify/blobs';
+import pg from 'pg';
+
+const { Pool } = pg;
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
 
 /**
- * Función central de Embeddings: gemini-embedding-2
+ * Función de Embeddings con Gemini (3072D)
  */
 async function getQueryEmbedding(text, apiKey) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-2:embedContent?key=${apiKey}`;
@@ -18,8 +24,7 @@ async function getQueryEmbedding(text, apiKey) {
 
   if (!response.ok) {
     const error = await response.json();
-    console.error("Gemini Error:", JSON.stringify(error, null, 2));
-    throw new Error("Fallo al vectorizar la pregunta");
+    throw new Error("Fallo al vectorizar pregunta con Gemini");
   }
 
   const data = await response.json();
@@ -27,19 +32,7 @@ async function getQueryEmbedding(text, apiKey) {
 }
 
 /**
- * Similitud del Coseno (Máxima eficiencia en JS)
- */
-function cosineSimilarity(vecA, vecB) {
-  let dot = 0, normA = 0, normB = 0;
-  for (let i = 0; i < vecA.length; i++) {
-    dot += vecA[i] * vecB[i];
-    normA += vecA[i] * vecA[i]; normB += vecB[i] * vecB[i];
-  }
-  return dot / (Math.sqrt(normA) * Math.sqrt(normB));
-}
-
-/**
- * Inferencia Final con Groq (Llama 3)
+ * Inferencia con Groq
  */
 async function callGroq(contexto, pregunta) {
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -51,8 +44,8 @@ async function callGroq(contexto, pregunta) {
     body: JSON.stringify({
       model: 'llama-3.1-8b-instant',
       messages: [
-        { role: 'system', content: 'Eres un experto en convenios de transporte. Responde usando exclusivamente el contexto. Sé conciso y profesional.' },
-        { role: 'user', content: `Contexto del Convenio:\n${contexto}\n\nDuda del trabajador: ${pregunta}` }
+        { role: 'system', content: 'Eres un experto en convenios de transporte. Responde usando exclusivamente el contexto. Sé conciso.' },
+        { role: 'user', content: `Contexto:\n${contexto}\n\nPregunta: ${pregunta}` }
       ],
       temperature: 0.1
     })
@@ -61,49 +54,34 @@ async function callGroq(contexto, pregunta) {
   return data.choices?.[0]?.message?.content;
 }
 
-let vectorStoreCache = null;
-
 /**
- * EXPORT HANDLER (Netlify)
+ * HANDLER PRINCIPAL (NEON VERSION)
  */
 export async function handler(event, context) {
-  // 1. Bloqueo de seguridad: Identity
   const user = context.clientContext?.user;
-  if (!user) return { statusCode: 401, body: JSON.stringify({ error: 'Inicia sesión.' }) };
+  if (!user) return { statusCode: 401, body: JSON.stringify({ error: 'Auth requerida' }) };
 
   try {
     const { pregunta } = JSON.parse(event.body);
     if (!pregunta) return { statusCode: 400, body: JSON.stringify({ error: 'Pregunta vacía' }) };
 
-    // 2. Cargador de Blobs Blindado (Plan B incluido)
-    if (!vectorStoreCache) {
-      const store = getStore({
-        name: 'vectorstore', // Nombre consistente con tu script de subida
-        siteID: process.env.NETLIFY_SITE_ID || process.env.SITE_ID,
-        token: process.env.NETLIFY_AUTH_TOKEN || process.env.NETLIFY_API_TOKEN
-      });
-      
-      // Obtenemos el JSON directamente parseado
-      vectorStoreCache = await store.get('metadatos.json', { type: 'json' });
-      
-      if (!vectorStoreCache) {
-        throw new Error("Base de datos metadatos.json no encontrada en Blobs");
-      }
-    }
-
-    // 3. Vectorización de la duda
+    // 1. Vectorizar duda del usuario
     const queryVector = await getQueryEmbedding(pregunta, process.env.GEMINI_API_KEY);
+    const vectorString = `[${queryVector.join(',')}]`;
 
-    // 4. Búsqueda de similitud top 3
-    const results = vectorStoreCache.map(doc => ({
-      ...doc,
-      similarity: cosineSimilarity(queryVector, doc.embedding)
-    }))
-    .sort((a, b) => b.similarity - a.similarity)
-    .slice(0, 3);
+    // 2. Búsqueda Vectorial en Neon (pgvector)
+    // El operador <=> calcula la distancia coseno. 1 - distancia = similitud.
+    const query = `
+      SELECT contenido, pagina, 1 - (embedding <=> $1::vector) as similarity
+      FROM documentos_convenio
+      ORDER BY similarity DESC
+      LIMIT 3;
+    `;
+    
+    const { rows } = await pool.query(query, [vectorString]);
 
-    // 5. Inferencia Final
-    const contexto = results.map(r => `[Pág. ${r.pagina}] ${r.texto}`).join('\n\n');
+    // 3. Generar respuesta con el contexto recuperado
+    const contexto = rows.map(r => `[Pág. ${r.pagina}] ${r.contenido}`).join('\n\n');
     const respuesta = await callGroq(contexto, pregunta);
 
     return {
@@ -111,15 +89,15 @@ export async function handler(event, context) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         respuesta,
-        fuentes: results.map(r => ({ pagina: r.pagina, score: r.similarity }))
+        fuentes: rows.map(r => ({ pagina: r.pagina, score: r.similarity }))
       })
     };
 
   } catch (error) {
-    console.error("RAG Error:", error.message);
+    console.error("Neon RAG Error:", error.message);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: "El asistente está fuera de servicio temporalmente." })
+      body: JSON.stringify({ error: "Error en la consulta. Verifica la base de datos." })
     };
   }
 }

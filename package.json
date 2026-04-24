@@ -19,6 +19,8 @@
   },
   "homepage": "https://github.com/julioherrera19/hojaderutabus#readme",
   "dependencies": {
-    "@netlify/blobs": "^10.7.4"
+    "@netlify/blobs": "^10.7.4",
+    "dotenv": "^17.4.2",
+    "pg": "^8.20.0"
   }
 }
