@@ -1,37 +1,40 @@
 import { getStore } from '@netlify/blobs';
-import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 
-// Configuración de Embeddings de Google (Query del usuario)
-const embeddings = new GoogleGenerativeAIEmbeddings({
-  apiKey: process.env.GEMINI_API_KEY,
-  modelName: "text-embedding-004",
-});
+/**
+ * CONFIGURACIÓN DE AI
+ * Usamos fetch directo para minimizar el tamaño del paquete y dependencias.
+ */
+const EMBEDDING_MODEL = "text-embedding-004"; // El modelo de 3072 dimensiones de Google
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${EMBEDDING_MODEL}:embedContent?key=${process.env.GEMINI_API_KEY}`;
 
 let vectorStoreCache = null;
 
 /**
- * Recupera el almacén de vectores desde Netlify Blobs.
- * Se asume que el almacén contiene los textos y sus embeddings generados con Gemini.
+ * Obtiene el embedding de la pregunta usando el modelo de 3072 dimensiones.
  */
-async function getVectorStore() {
-  if (vectorStoreCache) return vectorStoreCache;
+async function getGeminiEmbedding(text) {
+  const response = await fetch(GEMINI_API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      content: { parts: [{ text }] }
+    })
+  });
   
-  const store = getStore('vectorstore');
-  const metadatosStr = await store.get('metadatos.json', { type: 'text' });
-  
-  if (!metadatosStr) {
-    throw new Error("No se encontró el almacén de vectores en Blobs.");
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Gemini Embedding Error: ${error}`);
   }
   
-  vectorStoreCache = JSON.parse(metadatosStr);
-  return vectorStoreCache;
+  const data = await response.json();
+  return data.embedding.values;
 }
 
 /**
- * Cálculo manual de similitud de coseno para evitar dependencias nativas (FAISS) en Lambda.
+ * Similitud del coseno para comparar la duda con el convenio.
  */
 function cosineSimilarity(vecA, vecB) {
-  let dot = 0; let normA = 0; let normB = 0;
+  let dot = 0, normA = 0, normB = 0;
   for (let i = 0; i < vecA.length; i++) {
     dot += vecA[i] * vecB[i];
     normA += vecA[i] * vecA[i];
@@ -40,8 +43,9 @@ function cosineSimilarity(vecA, vecB) {
   return dot / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
-// --- Proveedores de Inferencia ---
-
+/**
+ * Inferencia con Groq (Respuesta final).
+ */
 async function callGroq(contexto, pregunta) {
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
@@ -52,96 +56,69 @@ async function callGroq(contexto, pregunta) {
     body: JSON.stringify({
       model: 'llama-3.1-8b-instant',
       messages: [
-        { role: 'system', content: 'Eres experto en convenios de transporte. Responde de forma concisa usando solo el contexto proporcionado.' },
-        { role: 'user', content: `Contexto:\n${contexto}\n\nPregunta: ${pregunta}` }
+        { role: 'system', content: 'Eres experto en convenios de transporte. Responde usando exclusivamente el contexto. Sé conciso y profesional.' },
+        { role: 'user', content: `Contexto del Convenio:\n${contexto}\n\nDuda del trabajador: ${pregunta}` }
       ],
-      max_tokens: 600
+      temperature: 0.1
     })
   });
-  if (!response.ok) throw new Error('Groq falló');
+  
+  if (!response.ok) throw new Error('Groq Offline');
   const data = await response.json();
   return data.choices?.[0]?.message?.content;
 }
 
-async function callOpenRouter(contexto, pregunta) {
-  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      model: 'openrouter/free', // O el modelo que prefieras de respaldo
-      messages: [
-        { role: 'system', content: 'Asistente experto en normativa de transporte.' },
-        { role: 'user', content: `Contexto:\n${contexto}\n\nPregunta: ${pregunta}` }
-      ]
-    })
-  });
-  if (!response.ok) throw new Error('OpenRouter falló');
-  const data = await response.json();
-  return data.choices?.[0]?.message?.content;
-}
-
-// --- Handler Principal ---
-
+/**
+ * HANDLER PRINCIPAL
+ */
 export async function handler(event, context) {
-  const identityUser = context.clientContext?.user;
-  if (!identityUser) {
-    return { statusCode: 401, body: JSON.stringify({ error: 'Auth requerida.' }) };
+  // 1. Seguridad: Validar usuario de Netlify Identity
+  const user = context.clientContext?.user;
+  if (!user) {
+    return { statusCode: 401, body: JSON.stringify({ error: 'Identificación requerida' }) };
   }
 
   try {
     const { pregunta } = JSON.parse(event.body);
-    if (!pregunta) return { statusCode: 400, body: JSON.stringify({ error: 'Falta pregunta' }) };
+    if (!pregunta) return { statusCode: 400, body: JSON.stringify({ error: 'Pregunta vacía' }) };
 
-    // 1. Obtener Embedding de la pregunta vía API de Gemini (LIGERO)
-    const queryEmbedding = await embeddings.embedQuery(pregunta);
+    // 2. Obtener Embeddings de la duda (3072 dims)
+    const queryVector = await getGeminiEmbedding(pregunta);
 
-    // 2. Cargar base de conocimientos (Vectores + Texto)
-    const { textos, paginas, embeddings: docEmbeddings } = await getVectorStore();
+    // 3. Cargar base de datos desde Netlify Blobs (metadatos.json)
+    if (!vectorStoreCache) {
+      const store = getStore('vectorstore');
+      const data = await store.get('metadatos.json', { type: 'text' });
+      if (!data) throw new Error("Base de datos vectorial no encontrada en Blobs");
+      vectorStoreCache = JSON.parse(data);
+    }
 
-    // 3. Búsqueda de similitud manual
-    const results = docEmbeddings.map((emb, i) => ({
-      index: i,
-      score: cosineSimilarity(queryEmbedding, emb)
+    // 4. Búsqueda de similitud manual (Top 3)
+    const results = vectorStoreCache.map((doc, i) => ({
+      ...doc,
+      similarity: cosineSimilarity(queryVector, doc.embedding)
     }))
-    .sort((a, b) => b.score - a.score)
+    .sort((a, b) => b.similarity - a.similarity)
     .slice(0, 3);
 
-    // 4. Construir contexto
-    const chunksRelvantes = results.map(r => ({
-      texto: textos[r.index],
-      pagina: paginas[r.index],
-      score: r.score
-    }));
-    
-    const contextoStr = chunksRelvantes.map(c => `[Pág. ${c.pagina}] ${c.texto}`).join('\n\n');
-
-    // 5. Inferencia con Fallback (GROQ -> OpenRouter)
-    let respuesta;
-    try {
-      console.log('Intentando con GROQ...');
-      respuesta = await callGroq(contextoStr, pregunta);
-    } catch (err) {
-      console.log('Fallo GROQ, intentando OpenRouter...');
-      respuesta = await callOpenRouter(contextoStr, pregunta);
-    }
+    // 5. Generar respuesta
+    const contexto = results.map(r => `[Pág. ${r.pagina}] ${r.texto}`).join('\n\n');
+    const respuesta = await callGroq(contexto, pregunta);
 
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         respuesta,
-        fuentes: chunksRelvantes.map(c => ({ pagina: c.pagina, score: c.score }))
+        fuentes: results.map(r => ({ pagina: r.pagina, score: r.similarity }))
       })
     };
 
   } catch (error) {
-    console.error('Error RAG:', error);
+    console.error("Error RAG:", error.message);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: error.message })
+      body: JSON.stringify({ error: "El asistente ha tenido un problema técnico. Inténtalo de nuevo." })
     };
   }
 }
