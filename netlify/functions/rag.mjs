@@ -1,6 +1,9 @@
-// netlify/functions/rag.js
 import { getStore } from '@netlify/blobs';
-import { pipeline } from '@xenova/transformers';
+import { pipeline, env } from '@xenova/transformers';
+
+// Configuración para entorno serverless (Evita error de path/fileURLToPath)
+env.allowLocalModels = false;
+env.useBrowserCache = false;
 
 let vectorStoreCache = null;
 let embedder = null;
